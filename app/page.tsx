@@ -132,8 +132,8 @@ function CardCarousel({
     // Mobile Carousel View
     const card = cards[currentIndex];
     const carouselAnimation = cmsConfig.stopMobileCarouselAnimation
-      ? 'transition-colors duration-300'
-      : 'hover:shadow-2xl hover:scale-105 transition-all duration-300';
+      ? ''
+      : 'hover:shadow-2xl hover:scale-105 transition-transform duration-300';
 
     return (
       <div className="space-y-4">
@@ -171,7 +171,7 @@ function CardCarousel({
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`w-2 h-2 rounded-full transition ${
+                className={`w-2 h-2 rounded-full ${
                   idx === currentIndex
                     ? 'w-6 bg-[var(--site-text-color)]'
                     : 'bg-[var(--site-border-color)]'
@@ -181,7 +181,7 @@ function CardCarousel({
           </div>
           <button
             onClick={nextCard}
-            className="flex-1 rounded-lg border border-[var(--site-border-color)] bg-[var(--site-surface-color)] py-2 transition hover:opacity-80"
+            className="flex-1 rounded-lg border border-[var(--site-border-color)] bg-[var(--site-surface-color)] py-2 hover:opacity-80"
           >
             Next
           </button>
