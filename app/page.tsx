@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import {
   ChevronRight,
@@ -75,7 +74,6 @@ function isLightColor(hexColor: string) {
   const green = parseInt(hexColor.slice(3, 5), 16);
   const blue = parseInt(hexColor.slice(5, 7), 16);
   const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
-
   return brightness > 180;
 }
 
@@ -88,7 +86,6 @@ function getSitePalette(textColor: string) {
       buttonSurface: '#0f172a',
     };
   }
-
   return {
     background: '#f8fafc',
     surface: '#ffffff',
@@ -97,7 +94,7 @@ function getSitePalette(textColor: string) {
   };
 }
 
-// Mobile carousel component
+// Horizontal carousel component — works on ALL screen sizes
 function CardCarousel({
   cards,
   cmsConfig,
@@ -106,19 +103,9 @@ function CardCarousel({
   cmsConfig: CMSConfig;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Feature 2: Stop animation when switching to mobile carousel view
-  const shouldShowCarousel = isMobile && cmsConfig.enableMobileCarousel;
+  // Show carousel on every viewport when the CMS flag is on
+  const shouldShowCarousel = cmsConfig.enableMobileCarousel;
 
   const nextCard = () => {
     setCurrentIndex((prev) => (prev + 1) % cards.length);
@@ -129,14 +116,13 @@ function CardCarousel({
   };
 
   if (shouldShowCarousel) {
-    // Mobile Carousel View
     const card = cards[currentIndex];
     const carouselAnimation = cmsConfig.stopMobileCarouselAnimation
       ? ''
       : 'hover:shadow-2xl hover:scale-105 transition-transform duration-300';
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-2xl mx-auto">
         <div
           className={`rounded-xl border border-[var(--site-border-color)] bg-[var(--site-surface-color)] p-8 min-h-[320px] flex flex-col justify-between ${carouselAnimation}`}
         >
@@ -171,7 +157,7 @@ function CardCarousel({
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`w-2 h-2 rounded-full ${
+                className={`w-2 h-2 rounded-full transition-all ${
                   idx === currentIndex
                     ? 'w-6 bg-[var(--site-text-color)]'
                     : 'bg-[var(--site-border-color)]'
@@ -190,40 +176,34 @@ function CardCarousel({
     );
   }
 
-  // Desktop Grid View - with animations
+  // Fallback: Desktop Grid View (when carousel flag is OFF)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {cards.map((card) => {
-        return (
-          <div
-            key={card.id}
-            className={`
-              rounded-xl border border-[var(--site-border-color)] bg-[var(--site-surface-color)] p-6 min-h-[280px] flex flex-col justify-between
-              hover:shadow-2xl hover:scale-105 transition-all duration-300
-              cursor-pointer group
-            `}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="opacity-80 group-hover:opacity-100 transition-opacity">
-                {card.icon}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold mb-2">{card.title}</h3>
-              <p className="text-sm mb-6 line-clamp-3 opacity-90">
-                {card.description}
-              </p>
-              <a
-                href={card.link}
-                className="inline-flex items-center gap-2 font-semibold hover:opacity-80 transition-opacity"
-              >
-                Learn more{' '}
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
+      {cards.map((card) => (
+        <div
+          key={card.id}
+          className="rounded-xl border border-[var(--site-border-color)] bg-[var(--site-surface-color)] p-6 min-h-[280px] flex flex-col justify-between hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+              {card.icon}
             </div>
           </div>
-        );
-      })}
+          <div>
+            <h3 className="text-xl font-bold mb-2">{card.title}</h3>
+            <p className="text-sm mb-6 line-clamp-3 opacity-90">
+              {card.description}
+            </p>
+            <a
+              href={card.link}
+              className="inline-flex items-center gap-2 font-semibold hover:opacity-80 transition-opacity"
+            >
+              Learn more{' '}
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -234,7 +214,6 @@ function ProductShowcase({
   enableMobileCarousel: boolean;
 }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     async function loadProducts() {
@@ -243,25 +222,13 @@ function ProductShowcase({
         if (!response.ok) {
           return;
         }
-
         const data = await response.json();
         setProducts(Array.isArray(data.items) ? data.items : []);
       } catch (error) {
         console.error('Failed to load products:', error);
       }
     }
-
     loadProducts();
-  }, []);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const visibleProducts =
@@ -272,7 +239,9 @@ function ProductShowcase({
           { id: 'sample-2', name: 'Risk Intelligence' },
           { id: 'sample-3', name: 'Policy Insights' },
         ];
-  const shouldUseHorizontalScroll = isMobile && enableMobileCarousel;
+
+  // Horizontal scroll on ALL viewports when the flag is on
+  const shouldUseHorizontalScroll = enableMobileCarousel;
 
   return (
     <div
@@ -324,19 +293,17 @@ export default function TempLandingPage() {
         if (!response.ok) {
           return;
         }
-
         setCmsConfig(await response.json());
       } catch (error) {
         console.error('Failed to load site config:', error);
       }
     }
-
     loadConfig();
   }, []);
 
   return (
     <div
-      className="w-full overflow-hidden bg-[var(--site-background-color)] [&_*]:!text-[var(--site-text-color)]"
+      className="w-full overflow-hidden bg-[var(--site-background-color)] text-[var(--site-text-color)]"
       style={
         {
           '--site-text-color': cmsConfig.textColor,
@@ -384,8 +351,6 @@ export default function TempLandingPage() {
               workflow
             </p>
           </div>
-
-          {/* Feature 2: Carousel with animation control */}
           <CardCarousel cards={cardBlocks} cmsConfig={cmsConfig} />
         </div>
       </section>
@@ -399,7 +364,6 @@ export default function TempLandingPage() {
               Products published from the admin panel.
             </p>
           </div>
-
           <ProductShowcase
             enableMobileCarousel={cmsConfig.enableMobileCarousel}
           />
@@ -412,7 +376,6 @@ export default function TempLandingPage() {
           <h2 className="text-4xl font-bold mb-12 text-center">
             Why Choose Verisk?
           </h2>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
@@ -423,12 +386,14 @@ export default function TempLandingPage() {
               },
               {
                 title: 'Global Data Sets',
-                description: 'Access comprehensive data from sources worldwide',
+                description:
+                  'Access comprehensive data from sources worldwide',
                 icon: '🌍',
               },
               {
                 title: '24/7 Support',
-                description: 'Dedicated support team ready to help you succeed',
+                description:
+                  'Dedicated support team ready to help you succeed',
                 icon: '💬',
               },
             ].map((feature, idx) => (
@@ -472,81 +437,33 @@ export default function TempLandingPage() {
             <div>
               <h3 className="font-bold mb-4">Solutions</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    General Insurance
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Reinsurance
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Life & Health
-                  </a>
-                </li>
+                <li><a href="#" className="hover:opacity-80">General Insurance</a></li>
+                <li><a href="#" className="hover:opacity-80">Reinsurance</a></li>
+                <li><a href="#" className="hover:opacity-80">Life & Health</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Newsroom
-                  </a>
-                </li>
+                <li><a href="#" className="hover:opacity-80">About Us</a></li>
+                <li><a href="#" className="hover:opacity-80">Careers</a></li>
+                <li><a href="#" className="hover:opacity-80">Newsroom</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Events
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Contact
-                  </a>
-                </li>
+                <li><a href="#" className="hover:opacity-80">Blog</a></li>
+                <li><a href="#" className="hover:opacity-80">Events</a></li>
+                <li><a href="#" className="hover:opacity-80">Contact</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-80">
-                    Cookies
-                  </a>
-                </li>
+                <li><a href="#" className="hover:opacity-80">Privacy</a></li>
+                <li><a href="#" className="hover:opacity-80">Terms</a></li>
+                <li><a href="#" className="hover:opacity-80">Cookies</a></li>
               </ul>
             </div>
           </div>
